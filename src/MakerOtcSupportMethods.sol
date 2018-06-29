@@ -18,21 +18,29 @@ contract OtcInterface {
 }
 
 contract MakerOtcSupportMethods is DSMath {
-    function getOffers(OtcInterface otc, address payToken, address buyToken) public view returns (uint[100] offers) {
+    function getOffers(OtcInterface otc, address payToken, address buyToken) public view returns (bytes32[500] offers) {
         offers = getOffers(otc, otc.getBestOffer(payToken, buyToken));
     }
 
-    function getOffers(OtcInterface otc, uint lastOfferId) public view returns (uint[100] offers) {
+    function getOffers(OtcInterface otc, uint lastOfferId) public view returns (bytes32[500] offers) {
         uint i = 0;
         while (i < 100) {
             if (lastOfferId != 0) {
-                offers[i] = lastOfferId;
-                // var (a, b, c, d, e, f) = otc.offers(lastOfferId);
-                // offers[i] = OtcInterface.OfferInfo(a, b, c, d, e, f);
+                uint payAmt;
+                uint buyAmt;
+                address owner;
+                uint timestamp;
+                (payAmt,, buyAmt,, owner, timestamp) = otc.offers(lastOfferId);
+                offers[i * 5] = bytes32(lastOfferId);
+                offers[i * 5 + 1] = bytes32(payAmt);
+                offers[i * 5 + 2] = bytes32(buyAmt);
+                offers[i * 5 + 3] = bytes32(owner);
+                offers[i * 5 + 4] = bytes32(timestamp);
                 lastOfferId = otc.getWorseOffer(lastOfferId);
             } else {
-                offers[i] = 0;
-                // offers[i] = OtcInterface.OfferInfo(0, address(0), 0, address(0), address(0), 0);
+                for (uint8 j = 0; j < 5; j ++) {
+                    offers[i * 5 + j] = bytes32(0);
+                }
             }
             i ++;
         }
