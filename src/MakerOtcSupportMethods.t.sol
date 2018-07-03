@@ -57,6 +57,14 @@ contract MakerOtcSupportMethodsTest is DSTest {
         otcSupport.getOffers(OtcInterface(otc), weth, mkr);
     }
 
+    function testProxyGetOffers2() public {
+        weth.mint(20 ether);
+        weth.transfer(user, 20 ether);
+        createOffers(1, 3200 ether, 10 ether);
+        createOffers(1, 2800 ether, 10 ether);
+        otcSupport.getOffers2(OtcInterface(otc), weth, mkr);
+    }
+
     function testProxyGetOffersAmountToSellAllPartialOrder() public {
         weth.mint(20 ether);
         weth.transfer(user, 20 ether);

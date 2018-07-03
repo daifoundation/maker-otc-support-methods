@@ -46,6 +46,24 @@ contract MakerOtcSupportMethods is DSMath {
         }
     }
 
+    function getOffers2(OtcInterface otc, address payToken, address buyToken) public view
+        returns (uint[100] ids, uint[100] payAmts, uint[100] buyAmts, address[100] owners, uint[100] timestamps)
+    {
+        (ids, payAmts, buyAmts, owners, timestamps) = getOffers2(otc, otc.getBestOffer(payToken, buyToken));
+    }
+
+    function getOffers2(OtcInterface otc, uint offerId) public view
+        returns (uint[100] ids, uint[100] payAmts, uint[100] buyAmts, address[100] owners, uint[100] timestamps)
+    {
+        uint i = 0;
+        do {
+            offerId = otc.getWorseOffer(offerId);
+            if(offerId == 0) break;
+            ids[i] = offerId;
+            (payAmts[i],, buyAmts[i],, owners[i], timestamps[i]) = otc.offers(offerId);
+        } while (++i < 100);
+    }
+
     function getOffersAmountToSellAll(OtcInterface otc, address payToken, uint payAmt, address buyToken) public view returns (uint ordersToTake, bool takesPartialOrder) {
         uint offerId = otc.getBestOffer(buyToken, payToken);                        // Get best offer for the token pair
         ordersToTake = 0;
