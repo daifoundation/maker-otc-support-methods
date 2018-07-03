@@ -57,10 +57,10 @@ contract MakerOtcSupportMethods is DSMath {
     {
         uint i = 0;
         do {
-            offerId = otc.getWorseOffer(offerId);
-            if(offerId == 0) break;
-            ids[i] = offerId;
             (payAmts[i],, buyAmts[i],, owners[i], timestamps[i]) = otc.offers(offerId);
+            if(owners[i] == 0) break;
+            ids[i] = offerId;
+            offerId = otc.getWorseOffer(offerId);
         } while (++i < 100);
     }
 
