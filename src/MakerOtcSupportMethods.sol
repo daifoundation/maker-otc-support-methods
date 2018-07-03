@@ -18,41 +18,13 @@ contract OtcInterface {
 }
 
 contract MakerOtcSupportMethods is DSMath {
-    function getOffers(OtcInterface otc, address payToken, address buyToken) public view returns (bytes32[500] offers) {
-        offers = getOffers(otc, otc.getBestOffer(payToken, buyToken));
-    }
-
-    function getOffers(OtcInterface otc, uint lastOfferId) public view returns (bytes32[500] offers) {
-        uint i = 0;
-        while (i < 100) {
-            if (lastOfferId != 0) {
-                uint payAmt;
-                uint buyAmt;
-                address owner;
-                uint timestamp;
-                (payAmt,, buyAmt,, owner, timestamp) = otc.offers(lastOfferId);
-                offers[i * 5] = bytes32(lastOfferId);
-                offers[i * 5 + 1] = bytes32(payAmt);
-                offers[i * 5 + 2] = bytes32(buyAmt);
-                offers[i * 5 + 3] = bytes32(owner);
-                offers[i * 5 + 4] = bytes32(timestamp);
-                lastOfferId = otc.getWorseOffer(lastOfferId);
-            } else {
-                for (uint8 j = 0; j < 5; j ++) {
-                    offers[i * 5 + j] = bytes32(0);
-                }
-            }
-            i ++;
-        }
-    }
-
-    function getOffers2(OtcInterface otc, address payToken, address buyToken) public view
+    function getOffers(OtcInterface otc, address payToken, address buyToken) public view
         returns (uint[100] ids, uint[100] payAmts, uint[100] buyAmts, address[100] owners, uint[100] timestamps)
     {
-        (ids, payAmts, buyAmts, owners, timestamps) = getOffers2(otc, otc.getBestOffer(payToken, buyToken));
+        (ids, payAmts, buyAmts, owners, timestamps) = getOffers(otc, otc.getBestOffer(payToken, buyToken));
     }
 
-    function getOffers2(OtcInterface otc, uint offerId) public view
+    function getOffers(OtcInterface otc, uint offerId) public view
         returns (uint[100] ids, uint[100] payAmts, uint[100] buyAmts, address[100] owners, uint[100] timestamps)
     {
         uint i = 0;

@@ -53,16 +53,21 @@ contract MakerOtcSupportMethodsTest is DSTest {
         weth.transfer(user, 20 ether);
         createOffers(1, 3200 ether, 10 ether);
         createOffers(1, 2800 ether, 10 ether);
-        // uint[] memory offers = 
-        otcSupport.getOffers(OtcInterface(otc), weth, mkr);
-    }
-
-    function testProxyGetOffers2() public {
-        weth.mint(20 ether);
-        weth.transfer(user, 20 ether);
-        createOffers(1, 3200 ether, 10 ether);
-        createOffers(1, 2800 ether, 10 ether);
-        otcSupport.getOffers2(OtcInterface(otc), weth, mkr);
+        uint[100] memory ids;
+        uint[100] memory payAmts;
+        uint[100] memory buyAmts;
+        address[100] memory owners;
+        uint[100] memory timestamps;
+        (ids, payAmts, buyAmts, owners, timestamps) = otcSupport.getOffers(OtcInterface(otc), weth, mkr);
+        assertEq(ids[0], 2);
+        assertEq(payAmts[0], 10 ether);
+        assertEq(buyAmts[0], 2800 ether);
+        assertEq(owners[0], user);
+        assertEq(ids[1], 1);
+        assertEq(payAmts[1], 10 ether);
+        assertEq(buyAmts[1], 3200 ether);
+        assertEq(owners[1], user);
+        assertEq(owners[2], address(0));
     }
 
     function testProxyGetOffersAmountToSellAllPartialOrder() public {
