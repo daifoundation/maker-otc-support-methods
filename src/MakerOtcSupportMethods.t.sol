@@ -8,7 +8,7 @@ import "./MakerOtcSupportMethods.sol";
 contract FakeUser {
     MatchingMarket otc;
 
-    function FakeUser(MatchingMarket otc_) public {
+    constructor(MatchingMarket otc_) public {
         otc = otc_;
     }
 
@@ -16,8 +16,8 @@ contract FakeUser {
         ERC20(token).approve(otc, uint(-1));
     }
 
-    function doOffer(uint amount1, address token1, uint amount2, address token2) public {
-        otc.offer(amount1, ERC20(token1), amount2, ERC20(token2), 0);
+    function doLimitOffer(uint amount1, address token1, uint amount2, address token2, bool forceSellAmt) public {
+        otc.limitOffer(amount1, ERC20(token1), amount2, ERC20(token2), forceSellAmt, 0);
     }
 }
 
@@ -34,7 +34,6 @@ contract MakerOtcSupportMethodsTest is DSTest {
 
         otcSupport = new MakerOtcSupportMethods();
         otc = new MatchingMarket(uint64(now + 1 weeks));
-        otc.addTokenPairWhitelist(weth, mkr);
         weth.approve(otc);
         mkr.approve(otc);
         user = new FakeUser(otc);
@@ -44,7 +43,7 @@ contract MakerOtcSupportMethodsTest is DSTest {
 
     function createOffers(uint oQuantity, uint mkrAmount, uint wethAmount) public {
         for (uint i = 0; i < oQuantity; i ++) {
-            user.doOffer(wethAmount / oQuantity, weth, mkrAmount / oQuantity, mkr);
+            user.doLimitOffer(wethAmount / oQuantity, weth, mkrAmount / oQuantity, mkr, false);
         }
     }
 
