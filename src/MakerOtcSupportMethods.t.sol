@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "ds-test/test.sol";
 import "maker-otc/matching_market.sol";
@@ -93,6 +93,36 @@ contract MakerOtcSupportMethodsTest is DSTest {
         uint offersToTake;
         bool takesPartialOrder;
         (offersToTake, takesPartialOrder) = otcSupport.getOffersAmountToSellAll(OtcInterface(otc), mkr, 4000 ether, weth);
+        assertEq(offersToTake, 2);
+        assertTrue(!takesPartialOrder);
+    }
+
+    function testProxyGetOffersAmountToSellAllPartialOrderDust() public {
+        weth.mint(20 ether);
+        weth.transfer(user, 20 ether);
+        createOffers(1, 3200 ether, 10 ether);
+        createOffers(1, 800 ether, 4 ether);
+        mkr.mint(4000 ether);
+        mkr.approve(otcSupport, 4000 ether);
+        uint offersToTake;
+        bool takesPartialOrder;
+        otc.setDustLimit(weth, 1); // 1 WETH => 320 MKR (worse offer price)
+        (offersToTake, takesPartialOrder) = otcSupport.getOffersAmountToSellAll(OtcInterface(otc), mkr, 4000 ether - 320, weth);
+        assertEq(offersToTake, 1);
+        assertTrue(takesPartialOrder);
+    }
+
+    function testProxyGetOffersAmountToSellAllNoPartialOrderDust() public {
+        weth.mint(20 ether);
+        weth.transfer(user, 20 ether);
+        createOffers(1, 3200 ether, 10 ether);
+        createOffers(1, 800 ether, 4 ether);
+        mkr.mint(4000 ether);
+        mkr.approve(otcSupport, 4000 ether);
+        uint offersToTake;
+        bool takesPartialOrder;
+        otc.setDustLimit(weth, 1); // 1 WETH => 320 MKR (worse offer price)
+        (offersToTake, takesPartialOrder) = otcSupport.getOffersAmountToSellAll(OtcInterface(otc), mkr, 4000 ether - 319, weth);
         assertEq(offersToTake, 2);
         assertTrue(!takesPartialOrder);
     }

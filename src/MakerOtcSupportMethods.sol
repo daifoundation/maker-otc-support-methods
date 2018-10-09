@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "ds-math/math.sol";
 
@@ -15,6 +15,7 @@ contract OtcInterface {
     }
     mapping (uint => OfferInfo) public offers;
     function best(address, address) public view returns (uint);
+    function dust(address) public view returns (uint);
     function getWorseOffer(uint) public view returns (uint);
 }
 
@@ -38,27 +39,33 @@ contract MakerOtcSupportMethods is DSMath {
         } while (++i < 100);
     }
 
+    // event test(string, bool);
+    // event test(string, uint);
+
     function getOffersAmountToSellAll(OtcInterface otc, address sellGem, uint sellAmt_, address buyGem) public view
         returns (uint offersToTake, bool takesPartialOffer)
     {
         uint offerId = otc.best(buyGem, sellGem);                                   // Get best offer for the token pair
         offersToTake = 0;
         uint sellAmt = sellAmt_;
-        uint offerBuyAmt = 0;
-        (,,,,offerBuyAmt,,,) = otc.offers(offerId);
+        (uint oOfferSellAmt, uint oOfferBuyAmt, uint offerSellAmt,, uint offerBuyAmt,,,) = otc.offers(offerId);
         while (sellAmt > offerBuyAmt) {
             offersToTake ++;                                                        // New offer taken
             sellAmt = sub(sellAmt, offerBuyAmt);                                    // Decrease amount to sell
             if (sellAmt > 0) {                                                      // If we still need more offers
                 offerId = otc.getWorseOffer(offerId);                               // We look for the next best offer
                 require(offerId != 0, "No enough offers");                          // Fails if there are not enough offers to complete
-                (,,,,offerBuyAmt,,,) = otc.offers(offerId);
+                (oOfferSellAmt, oOfferBuyAmt, offerSellAmt,, offerBuyAmt,,,) = otc.offers(offerId);
             }
         }
-        // If the remaining amount is equal than the latest offer, then it will also be taken completely
-        offersToTake = sellAmt == offerBuyAmt ? offersToTake + 1 : offersToTake;
-        // If the remaining amount is lower than the latest offer, then it will take a partial offer
-        takesPartialOffer = sellAmt < offerBuyAmt;
+
+        bool lastOfferFullTaken = sub(offerBuyAmt, sellAmt) == 0 ||
+        mul(sub(offerBuyAmt, sellAmt), oOfferSellAmt) / oOfferBuyAmt < otc.dust(buyGem);
+
+        // emit test("lastOfferFullTaken", lastOfferFullTaken);
+        // emit test("offerBuyAmt - sellAmt", sub(offerBuyAmt, sellAmt));
+        offersToTake = lastOfferFullTaken ? offersToTake + 1 : offersToTake;
+        takesPartialOffer = sellAmt > 0 && !lastOfferFullTaken;
     }
 
     function getOffersAmountToBuyAll(OtcInterface otc, address buyGem, uint buyAmt_, address sellGem) public view
@@ -67,20 +74,21 @@ contract MakerOtcSupportMethods is DSMath {
         uint offerId = otc.best(buyGem, sellGem);                                   // Get best offer for the token pair
         offersToTake = 0;
         uint buyAmt = buyAmt_;
-        uint offerSellAmt = 0;
-        (,,offerSellAmt,,,,,) = otc.offers(offerId);
+        (uint oOfferSellAmt, uint oOfferBuyAmt, uint offerSellAmt,, uint offerBuyAmt,,,) = otc.offers(offerId);
         while (buyAmt > offerSellAmt) {
             offersToTake ++;                                                        // New offer taken
             buyAmt = sub(buyAmt, offerSellAmt);                                     // Decrease amount to buy
             if (buyAmt > 0) {                                                       // If we still need more offers
                 offerId = otc.getWorseOffer(offerId);                               // We look for the next best offer
                 require(offerId != 0, "No enough offers");                          // Fails if there are not enough offers to complete
-                (,,offerSellAmt,,,,,) = otc.offers(offerId);
+                (oOfferSellAmt, oOfferBuyAmt, offerSellAmt,, offerBuyAmt,,,) = otc.offers(offerId);
             }
         }
-        // If the remaining amount is equal than the latest offer, then it will also be taken completely
-        offersToTake = buyAmt == offerSellAmt ? offersToTake + 1 : offersToTake;
-        // If the remaining amount is lower than the latest offer, then it will take a partial offer
-        takesPartialOffer = buyAmt < offerSellAmt;
+
+        bool lastOfferFullTaken = sub(offerSellAmt, buyAmt) == 0 ||
+        sub(offerSellAmt, buyAmt) < otc.dust(buyGem);
+
+        offersToTake = lastOfferFullTaken ? offersToTake + 1 : offersToTake;
+        takesPartialOffer = buyAmt > 0 && !lastOfferFullTaken;
     }
 }
