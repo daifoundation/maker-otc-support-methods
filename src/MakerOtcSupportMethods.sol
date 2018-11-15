@@ -91,4 +91,21 @@ contract MakerOtcSupportMethods is DSMath {
         offersToTake = lastOfferFullTaken ? offersToTake + 1 : offersToTake;
         takesPartialOffer = buyAmt > 0 && !lastOfferFullTaken;
     }
+
+    function getBuyAmount(OtcInterface otc, address buy_gem, address pay_gem, uint pay_amt) public view returns (uint fill_amt) {
+        uint offerId = otc.best(buy_gem, pay_gem);                                  // Get best offer for the token pair
+        require(offerId != 0);
+        (uint oSellAmt, uint oBuyAmt, uint sellAmt, , uint buyAmt, , , ) = otc.offers(offerId);
+        while (pay_amt > buyAmt) {
+            fill_amt = add(fill_amt, sellAmt);                                      // Add amount to buy accumulator
+            pay_amt = sub(pay_amt, buyAmt);                                         // Decrease amount to pay
+            if (pay_amt > 0) {                                                      // If we still need more offers
+                offerId = otc.getWorseOffer(offerId);                               // We look for the next best offer
+                require(offerId != 0);                                              // Fails if there are not enough offers to complete
+                (oSellAmt, oBuyAmt, sellAmt, , buyAmt, , , ) = otc.offers(offerId);
+            }
+        }
+        fill_amt = add(fill_amt, rmul(pay_amt * 10 ** 9, rdiv(sellAmt, buyAmt)) / 10 ** 9); // Add proportional amount of last offer to buy accumulator
+    }
+
 }
