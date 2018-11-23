@@ -154,4 +154,13 @@ contract MakerOtcSupportMethodsTest is DSTest {
         assertEq(offersToTake, 2);
         assertTrue(!takesPartialOrder);
     }
+
+    function testGetBuyAmount() public {
+        weth.mint(20 ether);
+        weth.transfer(user, 20 ether);
+        createOffers(1, 3200 ether, 10 ether);
+        createOffers(1, 2800 ether, 10 ether);
+        assertEq(otcSupport.getBuyAmount(OtcInterface(otc), weth, mkr, 1400 ether), 5 ether);
+        assertEq(otcSupport.getBuyAmount(OtcInterface(otc), weth, mkr, 4400 ether), 15 ether);
+    }
 }
