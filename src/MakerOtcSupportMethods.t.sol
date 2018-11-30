@@ -162,6 +162,7 @@ contract MakerOtcSupportMethodsTest is DSTest {
         createOffers(1, 2800 ether, 10 ether);
         assertEq(otcSupport.getBuyAmount(OtcInterface(otc), weth, mkr, 1400 ether), 5 ether);
         assertEq(otcSupport.getBuyAmount(OtcInterface(otc), weth, mkr, 4400 ether), 15 ether);
+        assertEq(otcSupport.getBuyAmount(OtcInterface(otc), weth, mkr, 99999 ether), 20 ether);
     }
 
     function testGetPayAmount() public {
@@ -171,5 +172,6 @@ contract MakerOtcSupportMethodsTest is DSTest {
         createOffers(1, 2800 ether, 10 ether);
         assertEq(otcSupport.getPayAmount(OtcInterface(otc), mkr, weth, 5 ether), 1400 ether);
         assertEq(otcSupport.getPayAmount(OtcInterface(otc), mkr, weth, 15 ether), 4400 ether);
+        assertEq(otcSupport.getPayAmount(OtcInterface(otc), mkr, weth, 999 ether), 6000 ether);
     }
 }

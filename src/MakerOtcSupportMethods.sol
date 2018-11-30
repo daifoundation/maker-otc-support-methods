@@ -101,7 +101,8 @@ contract MakerOtcSupportMethods is DSMath {
             pay_amt = sub(pay_amt, buyAmt);                                         // Decrease amount to pay
             if (pay_amt > 0) {                                                      // If we still need more offers
                 offerId = otc.getWorseOffer(offerId);                               // We look for the next best offer
-                require(offerId != 0);                                              // Fails if there are not enough offers to complete
+                if (offerId == 0)
+                    return;                                                         // Return everything if there are not enough offers to complete
                 (oSellAmt, oBuyAmt, sellAmt, , buyAmt, , , ) = otc.offers(offerId);
             }
         }
@@ -117,7 +118,8 @@ contract MakerOtcSupportMethods is DSMath {
             buy_amt = sub(buy_amt, sellAmt);                                        // Decrease amount to buy
             if (buy_amt > 0) {                                                      // If we still need more offers
                 offerId = otc.getWorseOffer(offerId);                               // We look for the next best offer
-                require(offerId != 0);                                              // Fails if there are not enough offers to complete
+                if (offerId == 0)
+                    return;                                                         // Return everything if there are not enough offers to complete
                 (oSellAmt, oBuyAmt, sellAmt, , buyAmt, , , ) = otc.offers(offerId);
             }
         }
