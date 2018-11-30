@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.24;
 
 import "ds-math/math.sol";
 
@@ -21,19 +21,19 @@ contract OtcInterface {
 
 contract MakerOtcSupportMethods is DSMath {
     function getOffers(OtcInterface otc, address sellGem, address buyGem) public view
-        returns (uint[100] ids, uint[100] sellAmts, uint[100] buyAmts, address[100] owners, uint[100] timestamps)
+        returns (uint[100] memory ids, uint[100] memory sellAmts, uint[100] memory buyAmts, address[100] memory owners, uint[100] memory timestamps)
     {
         (ids, sellAmts, buyAmts, owners, timestamps) = getOffers(otc, otc.best(sellGem, buyGem));
     }
 
     function getOffers(OtcInterface otc, uint offerId_) public view
-        returns (uint[100] ids, uint[100] sellAmts, uint[100] buyAmts, address[100] owners, uint[100] timestamps)
+        returns (uint[100] memory ids, uint[100] memory sellAmts, uint[100] memory buyAmts, address[100] memory owners, uint[100] memory timestamps)
     {
         uint offerId = offerId_;
         uint i = 0;
         do {
             (,,sellAmts[i],, buyAmts[i],, owners[i], timestamps[i]) = otc.offers(offerId);
-            if(owners[i] == 0) break;
+            if(owners[i] == address(0)) break;
             ids[i] = offerId;
             offerId = otc.getWorseOffer(offerId);
         } while (++i < 100);
